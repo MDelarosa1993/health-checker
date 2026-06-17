@@ -66,3 +66,29 @@ func Test_CheckURL(t *testing.T) {
 		})
 	}
 }
+
+func Test_CheckURL_WhenRequestFails(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	brokenURL := server.URL
+
+	server.Close()
+
+	urlChecker := NewChecker()
+
+	got := urlChecker.CheckURL(context.Background(), brokenURL)
+
+	if got.Status != "DOWN" {
+		t.Errorf("Status = %s; want DOWN", got.Status)
+	}
+
+	if got.Error == "" {
+		t.Error("Error should not be empty when request fails")
+	}
+
+	if got.CheckedAt == "" {
+		t.Error("CheckedAt should not be empty")
+	}
+}
